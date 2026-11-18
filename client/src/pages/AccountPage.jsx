@@ -27,6 +27,7 @@ export default function AccountPage() {
     savePassword,
     saveCard,
     removeAccount,
+    refresh,
   } = useAccount();
 
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function AccountPage() {
               onSaveCard={saveCard}
               onRemove={removeAccount}
               onSignOut={signOut}
+              onRefresh={refresh}
             />
           ) : (
             <AccountSignIn onSignIn={signIn} busy={busy} />

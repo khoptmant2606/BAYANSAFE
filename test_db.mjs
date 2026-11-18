@@ -3,7 +3,7 @@ import { query } from './server/src/db/pool.js';
 (async () => {
   try {
     const r = await query(
-      "SELECT EXISTS (SELECT 1 FROM pg_sequence WHERE sequencename='bayansafe_player_number_seq') AS seq_exists",
+      "SELECT EXISTS (SELECT 1 FROM pg_class WHERE relkind = 'S' AND relname = 'bayansafe_player_number_seq') AS seq_exists",
     );
     console.log('sequence exists:', r.rows[0].seq_exists);
 

@@ -19,7 +19,7 @@ function formatDate(value) {
  * the email, the RFID card enrollment, the password, and the removal of
  * the account.
  */
-export default function AccountDetails({ user, onSaveDetails, onSavePassword, onRemove, onSignOut }) {
+export default function AccountDetails({ user, onSaveDetails, onSavePassword, onRemove, onSignOut, onRefresh }) {
   const [name, setName] = useState(user.username);
   const [email, setEmail] = useState(user.email);
   const [detailsMessage, setDetailsMessage] = useState(null);
@@ -179,7 +179,7 @@ export default function AccountDetails({ user, onSaveDetails, onSavePassword, on
       </section>
 
       {/* ---------- RFID card enrollment ---------- */}
-      <RfidEnrollment user={user} />
+      <RfidEnrollment user={user} onEnrolled={onRefresh} />
 
       {/* ---------- the password ---------- */}
       <section className="account-section account-section--password">

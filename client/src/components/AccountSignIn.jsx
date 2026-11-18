@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { useRfidReader } from '../hooks/useRfidReader.js';
+
 /**
  * The sign in card of the account page.
  *
@@ -13,6 +15,57 @@ export default function AccountSignIn({ onSignIn, busy }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [googleBusy, setGoogleBusy] = useState(false);
+
+  // ---- RFID quick sign-in ----
+  const [rfidUid, setRfidUid] = useState('');
+  const [rfidPin, setRfidPin] = useState('');
+  const [rfidPinRequired, setRfidPinRequired] = useState(false);
+  const [rfidBusy, setRfidBusy] = useState(false);
+  const [rfidMessage, setRfidMessage] = useState('');
+
+  const rfidLogin = async (uid, pin) => {
+    setRfidBusy(true);
+    setRfidMessage('');
+    try {
+      const res = await fetch('/api/account/rfid/login', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, pin }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (body.pinRequired) {
+          setRfidPinRequired(true);
+          setRfidMessage(body.error ?? 'Please enter your PIN.');
+        } else {
+          setRfidMessage(body.error ?? 'Quick sign in failed.');
+        }
+        return;
+      }
+      window.location.href = '/account';
+    } catch {
+      setRfidMessage('We could not reach the server. Please try again.');
+    } finally {
+      setRfidBusy(false);
+    }
+  };
+
+  const { uid: scannedUid, status: rfidStatus } = useRfidReader({
+    enabled: true,
+    onScan: (card) => {
+      setRfidUid(card);
+      setRfidPin('');
+      setRfidPinRequired(false);
+      rfidLogin(card, '');
+    },
+  });
+
+  useEffect(() => {
+    if (scannedUid && scannedUid !== rfidUid) {
+      setRfidUid(scannedUid);
+    }
+  }, [scannedUid, rfidUid]);
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -121,6 +174,43 @@ export default function AccountSignIn({ onSignIn, busy }) {
           <button type="submit" className="btn-submit" disabled={busy}>
             {busy ? 'SIGNING IN...' : 'SIGN IN'}
           </button>
+
+          {/* RFID quick sign in */}
+          <section className="account-section account-section--rfid">
+            <h2>OR QUICK SIGN IN WITH RFID</h2>
+            <p className="account-lead">
+              Tap your RFID card on the reader to sign in.
+              {rfidUid && (
+                <span style={{ fontFamily: 'monospace', letterSpacing: '0.12em' }}>
+                  {' '}Card: {'*'.repeat(Math.max(0, rfidUid.length - 4)) + rfidUid.slice(-4)}
+                </span>
+              )}
+            </p>
+
+            {rfidPinRequired && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  rfidLogin(rfidUid, rfidPin);
+                }}
+              >
+                <input
+                  type="password"
+                  placeholder="Enter your PIN"
+                  value={rfidPin}
+                  onChange={(e) => setRfidPin(e.target.value)}
+                  maxLength={6}
+                  autoFocus
+                />
+                <button type="submit" className="btn-submit" disabled={rfidBusy}>
+                  {rfidBusy ? 'SIGNING IN...' : 'SIGN IN WITH PIN'}
+                </button>
+              </form>
+            )}
+
+            {rfidMessage && <p className="form-status form-status--error">{rfidMessage}</p>}
+            {rfidBusy && !rfidPinRequired && <p className="account-lead">Signing in...</p>}
+          </section>
 
           {/* Google Sign In */}
           <section className="account-section account-section--google">

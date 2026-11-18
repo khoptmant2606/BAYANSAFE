@@ -440,6 +440,67 @@ router.post('/rfid/enroll/scan', (req, res) => {
 });
 
 /**
+ * POST /api/account/rfid/enroll/detect
+ * The browser records a card that the ESP32 (or any bridge) scanned while an
+ * enrollment session is active for the signed-in player. This is the
+ * browser-side counterpart of /scan, so the device does not need to know the
+ * session id.
+ */
+router.post('/rfid/enroll/detect', requireUser, async (req, res) => {
+  const card = normalizeCardNumber(
+    typeof req.body?.uid === 'string'
+      ? req.body.uid
+      : typeof req.body?.card === 'string'
+        ? req.body.card
+        : '',
+  );
+  if (!card) {
+    return res.status(400).json({ ok: false, error: 'That is not a card number.' });
+  }
+
+  try {
+    const { rows } = await query(
+      `SELECT id, user_id, card_uid, status, expires_at
+         FROM rfid_enrollment_sessions
+        WHERE user_id = $1
+          AND status = 'active'
+        ORDER BY created_at DESC
+        LIMIT 1`,
+      [req.user.id],
+    );
+    const session = rows[0];
+    if (!session) {
+      return res.status(410).json({ ok: false, error: 'No active enrollment session. Start enrollment again.' });
+    }
+    if (new Date(session.expires_at) < new Date()) {
+      await query(`UPDATE rfid_enrollment_sessions SET status = 'expired' WHERE id = $1`, [session.id]);
+      return res.status(410).json({ ok: false, error: 'Enrollment session expired.' });
+    }
+
+    // A card already on another account cannot be enrolled.
+    const used = await findByRfid(card);
+    if (used && used.id !== req.user.id) {
+      await query(`UPDATE rfid_enrollment_sessions SET status = 'cancelled' WHERE id = $1`, [session.id]);
+      return res.status(409).json({ ok: false, error: 'That card is already registered to another account.' });
+    }
+
+    await query(
+      `UPDATE rfid_enrollment_sessions SET card_uid = $2, status = 'detected' WHERE id = $1`,
+      [session.id, card],
+    );
+
+    res.json({
+      ok: true,
+      card,
+      session: { id: session.id, status: 'detected', expiresAt: session.expires_at },
+    });
+  } catch (err) {
+    console.error('Could not record scan:', describeError(err));
+    res.status(503).json({ ok: false, error: 'The database could not be reached.' });
+  }
+});
+
+/**
  * POST /api/account/rfid/enroll/confirm
  * The player confirms the detected card. Saves it to the account.
  */
@@ -595,6 +656,69 @@ router.delete('/', requireUser, async (req, res) => {
     res.json({ ok: true, message: `${removed.username} was removed. Your account is gone.` });
   } catch (err) {
     console.error('Could not remove the account:', describeError(err));
+    res.status(503).json({ ok: false, error: 'The database could not be reached.' });
+  }
+});
+
+/* ------------------------------------------------------------------
+   RFID quick sign-in
+   ------------------------------------------------------------------ */
+
+/**
+ * POST /api/account/rfid/login
+ * Signs a player in with their RFID card (and PIN when one is set).
+ */
+router.post('/rfid/login', async (req, res) => {
+  const card = normalizeCardNumber(
+    typeof req.body?.uid === 'string'
+      ? req.body.uid
+      : typeof req.body?.card === 'string'
+        ? req.body.card
+        : '',
+  );
+  const pin = typeof req.body?.pin === 'string' ? req.body.pin : '';
+
+  if (!card) {
+    return res.status(400).json({ ok: false, error: 'That is not a card number.' });
+  }
+
+  const key = req.ip ?? 'unknown';
+  if (tooManyTries(key)) {
+    return res.status(429).json({ ok: false, error: 'Too many tries. Please wait a few minutes.' });
+  }
+
+  try {
+    const user = await findByRfid(card);
+    if (!user) {
+      noteFailedTry(key);
+      return res.status(404).json({ ok: false, error: 'No account is linked to this card.' });
+    }
+
+    if (user.pin_hash) {
+      if (!pin || !verifyPin(pin, user.pin_hash)) {
+        return res.status(401).json({
+          ok: false,
+          pinRequired: true,
+          error: 'Please enter your PIN.',
+        });
+      }
+    }
+
+    attempts.delete(key);
+    await removeOldSessions();
+
+    const { token } = await createSession(user.id);
+    setUserCookie(res, token);
+    await noteSignIn(user.id);
+
+    const fresh = await findById(user.id);
+    res.json({
+      ok: true,
+      message: `Welcome back, ${user.username}!`,
+      user: publicUser(fresh ?? user),
+    });
+  } catch (err) {
+    console.error('Could not sign in with RFID:', describeError(err));
     res.status(503).json({ ok: false, error: 'The database could not be reached.' });
   }
 });
