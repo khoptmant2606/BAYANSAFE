@@ -151,6 +151,34 @@ class TestDecals(PropsTestBase):
         dec = DecalSystem(bm, "town")
         self.assertEqual(dec.static.get_size(), (bm.width, bm.height))
 
+    def test_expired_footprints_do_not_crash_draw(self):
+        """Regression: expired prints used to produce a negative alpha."""
+        bm = self.make_map()
+        dec = DecalSystem(bm, "town")
+        rect = pygame.Rect(100, 100, 10, 14)
+        dec.update(1 / 60, rect, "calm")
+        rect.x += 20
+        dec.update(1 / 60, rect, "calm")
+        self.assertGreater(len(dec.footprints), 0)
+        # Age the prints past their 6 second lifetime.
+        for _ in range(60 * 8):
+            dec.update(1 / 60, rect, "calm")
+        self.assertEqual(dec.footprints, [])
+        surf = pygame.Surface((320, 180))
+        dec.draw(surf, self.make_camera())
+
+    def test_partially_faded_footprint_has_valid_alpha(self):
+        bm = self.make_map()
+        dec = DecalSystem(bm, "town")
+        rect = pygame.Rect(100, 100, 10, 14)
+        dec.update(1 / 60, rect, "calm")
+        rect.x += 20
+        dec.update(1 / 60, rect, "calm")
+        for _ in range(60 * 5):
+            dec.update(1 / 60, rect, "calm")
+        surf = pygame.Surface((320, 180))
+        dec.draw(surf, self.make_camera())
+
 
 class TestVegetation(PropsTestBase):
     def test_blades_created(self):

@@ -621,6 +621,10 @@ class DecalSystem:
             self.last_pos = pos
         for fp in self.footprints:
             fp["life"] -= dt
+        # Drop fully faded prints instead of letting life go negative.  A
+        # negative alpha is an invalid pygame colour and crashed the game
+        # a few seconds after entering a level.
+        self.footprints[:] = [fp for fp in self.footprints if fp["life"] > 0]
 
     def draw(self, surface: pygame.Surface, camera) -> None:
         view = _visible_area(surface, camera)
@@ -629,7 +633,10 @@ class DecalSystem:
             s = camera.apply(pygame.Rect(int(fp["x"]), int(fp["y"]), 1, 1))
             if not (-4 <= s.left <= surface.get_width() and -4 <= s.top <= surface.get_height()):
                 continue
-            alpha = int(60 * min(1.0, fp["life"]))
+            life = max(0.0, min(1.0, fp["life"]))
+            alpha = max(0, min(255, int(60 * life)))
+            if alpha <= 0:
+                continue
             col = (46, 62, 72, alpha) if fp["wet"] else (58, 44, 30, alpha)
             ox = fp["side"] * 2
             pygame.draw.ellipse(surface, col, (s.left + ox - 1, s.top - 1, 3, 2))
