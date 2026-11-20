@@ -138,6 +138,7 @@ const unsigned long DEBOUNCE_MS = 40;
 // Serial reporting
 unsigned long lastInputReport = 0;
 unsigned long lastHeartbeat   = 0;
+unsigned long lastRfidDebug   = 0;
 int  lastReportedX = 0;
 int  lastReportedY = 0;
 bool lastReportedB[4] = {false, false, false, false};
@@ -317,7 +318,10 @@ void setup() {
 
   SPI.begin();
   mfrc522.PCD_Init();
-  Serial.println("RC522 initialized.");
+  // Some RC522 boards ship with a weak default receiver gain. Maximum gain
+  // makes small/key-fob cards readable and costs nothing on a powered reader.
+  mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_max);
+  Serial.println("RC522 initialized (max antenna gain).");
 
   setupInput();
   reportInput(true);   // tell the PC we are alive
@@ -348,44 +352,48 @@ void loop() {
     }
   }
 
-  // Reconnect if dropped.
+  // ---- RFID: poll the reader BEFORE any Wi-Fi check.  The desktop game
+  //      reads the serial line, so a network outage must never stop scans.
+  if (now - lastRfidDebug >= 10000) {
+    Serial.println("RFID: reader polling");
+    lastRfidDebug = now;
+  }
+
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    String uid = readUid();
+    Serial.print("Card detected: ");
+    Serial.println(uid);
+
+    // Debounce repeated submissions while the card stays on the reader.
+    unsigned long scanNow = millis();
+    bool sameCard = (uid == lastUid);
+    bool tooSoon  = (scanNow - lastSentAt) < RESEND_DELAY_MS;
+
+    if (WiFi.status() == WL_CONNECTED) {
+      if (!(sameCard && tooSoon)) {
+        postUid(uid);
+      } else {
+        Serial.println("Skipping duplicate scan (card still on reader).");
+      }
+    } else {
+      Serial.println("Wi-Fi offline - card logged to serial only.");
+    }
+    lastUid     = uid;
+    lastSentAt  = scanNow;
+
+    // Halt PICC and stop crypto to be ready for next card
+    mfrc522.PICC_HaltA();
+    mfrc522.PCD_StopCrypto1();
+
+    delay(200);
+  } else {
+    delay(50);
+  }
+
+  // Reconnect if dropped (this no longer blocks card reads).
   if (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     WiFi.reconnect();
     delay(2000);
-    return;
   }
-
-  // Look for a new card
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    delay(50);
-    return;
-  }
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    delay(50);
-    return;
-  }
-
-  String uid = readUid();
-  Serial.print("Card detected: ");
-  Serial.println(uid);
-
-  // Debounce repeated submissions while the card stays on the reader.
-  unsigned long scanNow = millis();
-  bool sameCard = (uid == lastUid);
-  bool tooSoon  = (scanNow - lastSentAt) < RESEND_DELAY_MS;
-
-  if (!(sameCard && tooSoon)) {
-    postUid(uid);
-    lastUid     = uid;
-    lastSentAt  = scanNow;
-  } else {
-    Serial.println("Skipping duplicate scan (card still on reader).");
-  }
-
-  // Halt PICC and stop crypto to be ready for next card
-  mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
-
-  delay(200);
 }

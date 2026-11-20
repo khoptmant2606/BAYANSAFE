@@ -304,7 +304,9 @@ class LoginState(BaseState):
         if self.mode == "form" or self.busy:
             return
 
-        if self.mode == "rfid":
+        # A tap is a sign-in request in its own right - accept it on the main
+        # sign-in form too, so players never have to hunt for the RFID plank.
+        if self.mode in ("form", "rfid"):
             for card in get_pending_cards():
                 self._try_rfid(card)
                 break

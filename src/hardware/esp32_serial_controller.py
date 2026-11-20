@@ -95,6 +95,7 @@ def _note_card(uid: str):
     if uid == last_uid and now - last_at < _CARD_DEDUPE_S:
         return
     _LAST_CARD = (uid, now)
+    print(f"[esp32] card detected: {uid}", flush=True)
     _CARD_QUEUE.put(uid)
 
 
