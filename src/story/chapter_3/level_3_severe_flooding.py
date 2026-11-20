@@ -263,7 +263,7 @@ class Chapter3Level3SevereFlooding(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Breaker & Radio Tuning
     # ------------------------------------------------------------------
-    def _interact_breaker(self):
+    def _interact_breaker(self, item=None):
         if self._breaker_off:
             self.show_hint("Master breaker already isolated. Power is safely cut.", 2.5)
             return
@@ -293,7 +293,7 @@ class Chapter3Level3SevereFlooding(BaseLevel):
         self.set_checkpoint(self.RADIO_BENCH)
         self.show_hint("Power safely killed! Interact with the radio bench to pack and tune VHF Ch 16.", 5.0)
 
-    def _interact_radio(self):
+    def _interact_radio(self, item=None):
         if not self._breaker_off:
             self.show_hint("DANGER: Outlet is still live! Shut off the breaker panel first.", 3.5)
             return

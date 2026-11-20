@@ -252,7 +252,7 @@ class Chapter4Level4EarthquakeVolcano(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Sensor Calibration & PDZ Gate Lockout
     # ------------------------------------------------------------------
-    def _interact_sensor(self):
+    def _interact_sensor(self, item=None):
         if not self._santos_assisted:
             self.show_hint("Confer with Dr. Mira Santos on gas toxicity levels first.", 3.0)
             return
@@ -283,7 +283,7 @@ class Chapter4Level4EarthquakeVolcano(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Sensors reporting! Now run east to lock down the HIGHWAY BOOM BARRIER!", 5.0)
 
-    def _interact_gate(self):
+    def _interact_gate(self, item=None):
         if not self._sensor_calibrated:
             self.show_hint("Calibrate and broadcast the hazard readings before sealing the road.", 3.5)
             return

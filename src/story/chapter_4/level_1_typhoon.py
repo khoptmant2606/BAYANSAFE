@@ -253,7 +253,7 @@ class Chapter4Level1Typhoon(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Livestock Release & Dike Stacking
     # ------------------------------------------------------------------
-    def _interact_corral(self):
+    def _interact_corral(self, item=None):
         if not self._jun_assisted:
             self.show_hint("Talk to Jun before cutting corral lines.", 3.0)
             return
@@ -284,7 +284,7 @@ class Chapter4Level1Typhoon(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Livestock safe! Now head east to sandbag the crumbling DIKE breach!", 5.0)
 
-    def _interact_dike(self):
+    def _interact_dike(self, item=None):
         if not self._livestock_freed:
             self.show_hint("Free the trapped livestock first so they don't drown!", 3.5)
             return

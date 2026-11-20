@@ -5,6 +5,7 @@ active environmental Hazards, Decision prompts, and HUD rendering with zero
 environment image dependencies.
 """
 
+import inspect
 import math
 import random
 import re
@@ -69,6 +70,28 @@ from src.maps.world_props import (
     VehicleSystem,
     VegetationSway,
 )
+
+
+def _adapt_interact(callback):
+    """Return a callback that safely accepts the interactable item.
+
+    Levels use two historical signatures: ``callback(item)`` and
+    ``callback()``.  The engine always passes the item, so calling a zero-arg
+    handler raised ``TypeError`` on the exact frame the player pressed the
+    interact button and closed the game.  Normalising at registration time
+    keeps both styles working and makes input handling crash-proof.
+    """
+    if callback is None:
+        return None
+    try:
+        params = list(inspect.signature(callback).parameters.values())
+    except (TypeError, ValueError):  # builtins / C callables: assume they take it
+        return callback
+    if any(p.kind == p.VAR_POSITIONAL for p in params):
+        return callback
+    if any(p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD) for p in params):
+        return callback
+    return lambda item: callback()
 
 
 # ======================================================================
@@ -1107,7 +1130,7 @@ class BaseLevel:
             "label": label,
             "rect": pygame.Rect(rect),
             "color": color,
-            "on_interact": on_interact,
+            "on_interact": _adapt_interact(on_interact),
             "prompt": prompt,
             "alpha": alpha,
             "done": False,

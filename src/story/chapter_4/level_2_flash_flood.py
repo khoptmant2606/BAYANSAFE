@@ -264,7 +264,7 @@ class Chapter4Level2FlashFlood(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Road Probing & Harvest Hoist
     # ------------------------------------------------------------------
-    def _interact_probe(self):
+    def _interact_probe(self, item=None):
         if not self._rosa_assisted:
             self.show_hint("Consult with Aling Rosa before crossing the breach zone.", 3.0)
             return
@@ -294,7 +294,7 @@ class Chapter4Level2FlashFlood(BaseLevel):
         self.set_checkpoint((180, 175))
         self.show_hint("Crown marked! Now hoist the harvest sacks at the grain rack!", 5.0)
 
-    def _interact_harvest(self):
+    def _interact_harvest(self, item=None):
         if not self._road_probed:
             self.show_hint("Verify the safe crossing path before loading supplies.", 3.5)
             return

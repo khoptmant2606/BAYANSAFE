@@ -250,7 +250,7 @@ class Chapter5Level3FlashFire(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Firebreak Dig & Airlock Decoupler
     # ------------------------------------------------------------------
-    def _interact_firebreak(self):
+    def _interact_firebreak(self, item=None):
         if not self._paolo_assisted:
             self.show_hint("Consult with Engr. Paolo Santos on firebreak placement first.", 3.0)
             return
@@ -280,7 +280,7 @@ class Chapter5Level3FlashFire(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Firebreak complete! Now override the pneumatic AIRLOCK OVERRIDE panel!", 5.0)
 
-    def _interact_airlock(self):
+    def _interact_airlock(self, item=None):
         if not self._firebreak_dug:
             self.show_hint("Contain the wildfire before attempting to breach the facility.", 3.5)
             return

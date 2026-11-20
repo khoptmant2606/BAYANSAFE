@@ -253,7 +253,7 @@ class Chapter5Level1EarthquakeLandslide(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Boulder Lever & Ledge Crossing
     # ------------------------------------------------------------------
-    def _interact_boulder(self):
+    def _interact_boulder(self, item=None):
         if not self._paolo_assisted:
             self.show_hint("Consult with Engr. Paolo Santos on safe routes first.", 3.0)
             return
@@ -283,7 +283,7 @@ class Chapter5Level1EarthquakeLandslide(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Boulder cleared! Now traverse the BASALT LEDGE around the fissure!", 5.0)
 
-    def _interact_fissure(self):
+    def _interact_fissure(self, item=None):
         if not self._boulder_cleared:
             self.show_hint("Clear the roadway boulder before attempting the narrow ledge.", 3.5)
             return

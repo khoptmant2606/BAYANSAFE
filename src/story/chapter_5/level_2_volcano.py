@@ -246,7 +246,7 @@ class Chapter5Level2Volcano(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Mask Fit & Convoy Air Intake Scrape
     # ------------------------------------------------------------------
-    def _interact_mask(self):
+    def _interact_mask(self, item=None):
         if not self._rhea_assisted:
             self.show_hint("Consult with Rhea on protective gear first.", 3.0)
             return
@@ -277,7 +277,7 @@ class Chapter5Level2Volcano(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Rhea protected! Now clear the heavy ash from the CONVOY BUS intake!", 5.0)
 
-    def _interact_bus(self):
+    def _interact_bus(self, item=None):
         if not self._mask_fitted:
             self.show_hint("Protect Rhea with mask and goggles before moving to the convoy.", 3.5)
             return

@@ -262,7 +262,7 @@ class Chapter3Level4FireTsunami(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Valve Isolation & Stairs Sprint
     # ------------------------------------------------------------------
-    def _interact_valve(self):
+    def _interact_valve(self, item=None):
         if self._valve_shut:
             self.show_hint("Emergency fuel valve locked in OFF position. Pipelines isolated.", 3.0)
             return
@@ -294,7 +294,7 @@ class Chapter3Level4FireTsunami(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Fuel line sealed! Now sprint east to the CLIFF STAIRS before the wave hits!", 5.0)
 
-    def _interact_stairs(self):
+    def _interact_stairs(self, item=None):
         if not self._valve_shut:
             self.show_hint("Isolate the fuel lines first so the entire depot does not detonate!", 3.5)
             return

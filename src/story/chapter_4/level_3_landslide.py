@@ -186,7 +186,7 @@ class Chapter4Level3Landslide(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Scree Crossing & Telemetry Decoupler
     # ------------------------------------------------------------------
-    def _interact_scree(self):
+    def _interact_scree(self, item=None):
         if self._scree_crossed:
             self.show_hint("Foothill scree path stabilized with stepping stakes.", 2.5)
             return
@@ -212,7 +212,7 @@ class Chapter4Level3Landslide(BaseLevel):
         self.set_checkpoint((220, 168))
         self.show_hint("Scree crossed! Now examine the exposed AEGIS CONDUIT ahead.", 5.0)
 
-    def _interact_conduit(self):
+    def _interact_conduit(self, item=None):
         if not self._scree_crossed:
             self.show_hint("Navigate past the landslide scar first.", 3.0)
             return

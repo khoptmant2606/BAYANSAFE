@@ -269,7 +269,7 @@ class Chapter5Level4TyphoonSevereFlood(BaseLevel):
     # ------------------------------------------------------------------
     # Mini-games: Siren Trigger & Ridge Ascent
     # ------------------------------------------------------------------
-    def _interact_siren(self):
+    def _interact_siren(self, item=None):
         if not self._mayor_assisted:
             self.show_hint("Consult with Mayor Cruz before sounding municipal sirens.", 3.0)
             return
@@ -300,7 +300,7 @@ class Chapter5Level4TyphoonSevereFlood(BaseLevel):
         self.record_score("supplies_secured", 1)
         self.show_hint("Sirens sounding! Sprint to the CANYON RIDGE ASCENT to climb the canyon wall!", 5.0)
 
-    def _interact_stairs(self):
+    def _interact_stairs(self, item=None):
         if not self._siren_sounded:
             self.show_hint("Trigger the valley emergency sirens before evacuating!", 3.5)
             return
