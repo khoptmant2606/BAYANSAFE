@@ -56,6 +56,7 @@ FONT_DIR = BASE_DIR / "assets" / "fonts" / "text"
 
 # Sizes are in WINDOW pixels (the canvas is scaled x4).
 SIZES = {
+    "micro": 24,   # compact HUD tabs (one notch below "tiny")
     "tiny": 28,
     "small": 32,
     "body": 36,

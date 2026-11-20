@@ -1901,12 +1901,13 @@ class BaseLevel:
     HUD_PAD = 4
 
     # Quest board: compact, anchored top-left just under the status bar.
-    OBJ_PAD_X = 5
-    OBJ_PAD_Y = 3
+    OBJ_PAD_X = 4
+    OBJ_PAD_Y = 2
     OBJ_MAX_LINES = 3
-    OBJ_FONT = "small"    # one step down from "body"; use "body" if too small
-    OBJ_MIN_W = 90        # never narrower than this
-    OBJ_MAX_W = 150       # never wider than this
+    OBJ_FONT = "tiny"     # compact objective text
+    OBJ_TAB_FONT = "micro"  # even smaller collapsed "OBJ" tab
+    OBJ_MIN_W = 80        # never narrower than this
+    OBJ_MAX_W = 136       # never wider than this
     OBJ_MARGIN = 4        # distance from the left edge of the screen
     OBJ_SHOW_TIME = 6.0   # seconds the board stays open after a new objective
     OBJ_IDLE_SHOW = 2.0   # seconds standing still before the board reopens
@@ -1946,9 +1947,9 @@ class BaseLevel:
         """
         # Collapsed: just a small tab while the player is busy.
         if not self._objective_expanded():
-            tw, th = measure_text(self.OBJ_TAB_TEXT, "tiny")
+            tw, th = measure_text(self.OBJ_TAB_TEXT, self.OBJ_TAB_FONT)
             tab = pygame.Rect(
-                self.OBJ_MARGIN, self.HUD_BAR_H + 3, tw + 10, th + 4,
+                self.OBJ_MARGIN, self.HUD_BAR_H + 3, tw + 7, th + 2,
             )
             return tab, [self.OBJ_TAB_TEXT], th
 
@@ -1975,7 +1976,7 @@ class BaseLevel:
         widest = max(measure_text(line, self.OBJ_FONT)[0] for line in obj_lines)
         box_w = min(max_box_w, max(self.OBJ_MIN_W, widest + self.OBJ_PAD_X * 2))
         lh = line_height(self.OBJ_FONT)
-        line_gap = 2
+        line_gap = 1
         obj_box_h = (self.OBJ_PAD_Y * 2 + lh * len(obj_lines)
                      + line_gap * max(0, len(obj_lines) - 1))
         rect = pygame.Rect(
@@ -2168,8 +2169,8 @@ class BaseLevel:
             )
             theme.draw_text(
                 surface, self.OBJ_TAB_TEXT,
-                (obj_rect.centerx + 1, obj_rect.y + 2),
-                size="tiny", color=COLOR_UI_ACCENT, shadow=False,
+                (obj_rect.centerx + 1, obj_rect.y + 1),
+                size=self.OBJ_TAB_FONT, color=COLOR_UI_ACCENT, shadow=False,
                 anchor="midtop",
             )
         else:
@@ -2188,8 +2189,8 @@ class BaseLevel:
             for i, line in enumerate(obj_lines):
                 theme.draw_text(
                     surface, line,
-                    (obj_rect.x + self.OBJ_PAD_X + 2,
-                     obj_rect.y + PAD_Y + i * (lh + 2)),
+                    (obj_rect.x + self.OBJ_PAD_X + 1,
+                     obj_rect.y + PAD_Y + i * (lh + 1)),
                     size=self.OBJ_FONT, color=COLOR_UI_TEXT, shadow=True,
                     anchor="topleft",
                 )

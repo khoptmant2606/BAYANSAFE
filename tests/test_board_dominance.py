@@ -135,6 +135,17 @@ class BoardDominanceTests(unittest.TestCase):
         self.assertLessEqual(rect.w, level.OBJ_MAX_W)
         self.assertLessEqual(rect.right, W)
 
+    def test_collapsed_obj_tab_is_small(self):
+        """The collapsed OBJ tab stays a small chip with micro text."""
+        level = self.make_level()
+        level.obj_pinned = False
+        level.obj_show_timer = 0.0
+        level._idle_time = 0.0
+        rect, lines, _lh = level._objective_box(W)
+        self.assertEqual(lines, [level.OBJ_TAB_TEXT])
+        self.assertLessEqual(rect.w, 22)
+        self.assertLessEqual(rect.h, 10)
+
     def test_world_label_under_quest_board_is_dropped(self):
         level = self.make_level()
         theme.TEXT_QUEUE.clear()
